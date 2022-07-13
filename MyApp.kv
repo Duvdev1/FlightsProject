@@ -1,0 +1,77 @@
+<DbGenWidget>:
+    airlines: airlines
+    customers: customers
+    administrators: administrators
+    flights_per_company: flights_per_company
+    tickets_per_customer: tickets_per_customer
+
+    GridLayout:
+        cols:1
+        size: root.width, root.height
+
+        GridLayout:
+            cols:2
+
+
+            Label:
+                text: "Airline Companies: "
+            TextInput:
+                id: airlines
+                multiline:False
+            Label:
+                text: "Customers: "
+            TextInput:
+                id: customers
+                multiline:False
+            Label:
+                text: "Administrators: "
+            TextInput:
+                id: administrators
+                multiline:False
+            Label:
+                text: "Flights Per Company: "
+            TextInput:
+                id: flights_per_company
+                multiline:False
+            Label:
+                text: "Tickets Per Customer: "
+            TextInput:
+                id: tickets_per_customer
+                multiline:False
+
+
+
+        Label:
+            text: 'Add to DB'
+        CheckBox:
+            id: rbutton1
+            group: 'radio button'
+            state: 'down'
+            on_press: root.switchstate1()
+
+        Label:
+            text: 'Reset to DB'
+        CheckBox:
+            id: rbutton2
+            group: 'radio button'
+            state: 'normal'
+            on_press: root.switchstate2()
+
+        RoundedButton:
+            text: "Add"
+            size: root.width, 100
+            pos_hint: {'center_x': 0.5}
+            size_hint: (1,2)
+            on_press: root.pop()
+
+
+<RoundedButton@Button>
+    background_color: (0,0,0,0)
+    background_name: ''
+    canvas.before:
+        Color:
+            rgba: (48/255, 84/255, 150/255, 1)
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius:[58]
