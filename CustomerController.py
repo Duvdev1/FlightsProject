@@ -1,4 +1,5 @@
 import re
+import uuid
 from flask import Flask, make_response, request, render_template, Response
 import json
 from Administrator import Administrator
@@ -13,10 +14,14 @@ from Flights import Flights
 from db_config import local_session
 from db_config import config
 from Ticket import Ticket
+from ThreadLocksMgmt import ThreadLocksMgmt
+from RabbitProducerObject import RabbitProducerObject
 
 adminFacade = AdministratorFacade('Administrator', local_session, config)
 airlineFacade = AirlineCompanyFacade('Airline', local_session, config)
 customerFacade = CustomerFacade('Customer', local_session, config)
+rabbitProducer = RabbitProducerObject('dbRequest')
+threadLock = ThreadLocksMgmt.get_instance()
 
 app = Flask(__name__)
 
@@ -30,7 +35,10 @@ def home():
 
 @app.route('/ticket', methods=['POST', 'DELETE'])
 def add_or_remove_ticket():
+    requestId = str(uuid.uuid4())
     if request.method == 'DELETE':
+        rabbitProducer.publish({'id_': requestId, 'data' : 'data'})
+        threadLock.thread_lock(requestId)
         ticket_id = request.form
         ticket = DbRepo(Ticket, ticket_id)
         answer = customerFacade.remove_ticket(ticket)
@@ -39,7 +47,9 @@ def add_or_remove_ticket():
         else:
             return make_response('status: failed', 404)
     if request.method == 'POST':
-        new_ticket - request.form
+        rabbitProducer.publish({'id_': requestId, 'data' : 'data'})
+        threadLock.thread_lock(requestId)
+        new_ticket = request.form
         ticket = Ticket(flight_id=new_ticket.flight_id,customer_id=new_ticket.customer_id)
         answer = customerFacade.add_ticket(ticket)
         if answer is not None:
@@ -49,7 +59,10 @@ def add_or_remove_ticket():
         
 @app.route('/customer', methods=['PATCH'])
 def update_customer():
+    requestId = str(uuid.uuid4())
     if request.method == 'PATCH':
+        rabbitProducer.publish({'id_': requestId, 'data' : 'data'})
+        threadLock.thread_lock(requestId)
         update_customer = request.form
         customer = Customer(id=update_customer.id, first_name=update_customer.first_name, 
                             last_name=update_customer.last_name, address=update_customer.address, 
@@ -63,7 +76,10 @@ def update_customer():
         
 @app.route('/customer/<int:id>', methods=['GET'])
 def get_ticket_by_customer(id):
+    requestId = str(uuid.uuid4())
     if request.method == 'GET':
+        rabbitProducer.publish({'id_': requestId, 'data' : 'data'})
+        threadLock.thread_lock(requestId)
         customer = DbRepo(Customer, id)
         ticket = customerFacade.get_tickets_by_customer(customer)
         answer = str(ticket)

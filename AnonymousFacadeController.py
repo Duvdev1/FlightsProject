@@ -1,4 +1,5 @@
 from audioop import add
+import uuid
 from flask import Flask, jsonify, make_response, request, render_template, Response
 from Customer import Customer
 from DbRepo import DbRepo
@@ -9,8 +10,14 @@ from User import User
 import jwt
 import datetime
 import timedelta
+from ThreadLocksMgmt import ThreadLocksMgmt
+from RabbitProducerObject import RabbitProducerObject
 
 anonymusFacade = AnonymousFacade(local_session, config)
+
+rabbitProducer = RabbitProducerObject('dbRequest')
+threadLock = ThreadLocksMgmt.get_instance()
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ROY'
@@ -43,6 +50,9 @@ def login():
 
 @app.route('/customer', methods=['POST'])
 def add_customer():
+    requestId = str(uuid.uuid4())
+    rabbitProducer.publish({'id_': requestId, 'data' : 'data'})
+    threadLock.thread_lock(requestId)
     data = request.form
     userName = data.get("username")
     password = data.get("password")
